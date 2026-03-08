@@ -7,51 +7,53 @@ def build_ml_dataset(pdb_folder, output_csv="pocket_dataset.csv"):
     Loops through a folder of PDB files, extracts ML features for all pockets,
     and saves them into a single Pandas DataFrame.
     """
+
     all_pockets_data = []
     
-    # 1. Loop through every file in your dataset folder
+    # Loop through every file in the dataset folder
     for filename in os.listdir(pdb_folder):
+
         if filename.endswith(".pdb"):
-            # Extract the protein name (e.g., "1STP" from "1STP.pdb")
             protein_id = filename.split(".")[0] 
             pdb_path = os.path.join(pdb_folder, filename)
             
             print(f"\n{'='*40}\nProcessing {protein_id}...\n{'='*40}")
             
-            # 2. The Try-Except Block (Crucial for Data Science!)
-            # If one PDB is corrupted or weird, it skips it instead of crashing the whole loop
             try:
-                # Initialize your class
+                # Initialize the ProteinGrid and scan for pockets
                 protein = ProteinGrid(pdb_path)
                 protein.scan_pockets()
                 
-                # Cluster them (Notice output_file=None, so it doesn't spam your hard drive with PDBs!)
+                # Cluster distinct pockets
                 pockets = protein.cluster_and_export_pockets(output_file=None, min_size=50)
                 
-                # Analyze chemistry (Calculates your ML features)
+                # Analyze their chemistry (calculate ML features)
                 results = protein.analyze_all_pockets(pockets)
                 
-                # 3. Format the data for our ML spreadsheet
+                # Format the data for the ML spreadsheet
                 for pocket_id, features in results.items():
-                    # We add the protein ID and pocket ID so we know where this row came from
+                    # Add the protein ID and pocket ID so we know where this row came from
                     row = {
                         "protein_id": protein_id,
                         "pocket_id": pocket_id,
-                        "volume_A3": features["volume_A3"],
-                        "distance_to_core": features["distance_to_core"],
-                        "hydrophobic_count": features["hydrophobic_count"],
-                        "polar_count": features["polar_count"],
-                        "positive_count": features["positive_count"],
-                        "negative_count": features["negative_count"],
-                        "aromatic_count": features["aromatic_count"],
-                        "total_residues": features["total_residues_touching"]
                     }
+
+                    # Add all features EXCEPT lists and redundant raw counts
+                    features_to_skip = [
+                        "residue_list", "hydrophobic_count", "polar_count", 
+                        "positive_count", "negative_count", "aromatic_count"
+                    ]
+                    
+                    for key, value in features.items():
+                        if key not in features_to_skip:
+                            row[key] = value
+                    
                     all_pockets_data.append(row)
                     
             except Exception as e:
                 print(f"Skipping {protein_id} due to an error: {e}")
 
-    # 4. Convert the massive list into a single Pandas DataFrame and save as CSV
+    # Convert the massive all_pockets_data list into a single Pandas DataFrame and save as CSV
     print(f"\n{'='*40}\nFinished processing! Found {len(all_pockets_data)} total pockets.\n{'='*40}")
     
     if len(all_pockets_data) > 0:
