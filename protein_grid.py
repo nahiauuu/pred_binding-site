@@ -163,23 +163,29 @@ class ProteinGrid:
                 continue
                 
             valid_pockets += 1
-            extracted_pockets[valid_pockets] = voxel_indices
+            real_coords = (voxel_indices * self.grid_spacing) + self.min_coords
+            extracted_pockets[valid_pockets] = real_coords
 
-            print(f"Pocket {valid_pockets}: {len(voxel_indices)} voxels")
+            print(f"Pocket {valid_pockets}: {len(real_coords)} voxels")
         
         # Only write the PDB file if an output_file string was actually provided!
         if output_file:
+
             with open(output_file, "w") as f:
                 atom_serial = 1
-                for valid_id, voxel_indices in extracted_pockets.items():
-                    for index in voxel_indices:
-                        real_coord = (index * self.grid_spacing) + self.min_coords
-                        x, y, z = real_coord
+
+                for valid_id, real_coords in extracted_pockets.items():
+
+                    for coord in real_coords:
+
+                        x, y, z = coord
                         f.write(
                             f"HETATM{atom_serial:5d}  POC STP A{valid_id:4d}    "
                             f"{x:8.3f}{y:8.3f}{z:8.3f}  1.00  0.00           C  \n"
                         )
+
                         atom_serial += 1
+
             print(f"Saved visualization to {output_file}.")
         
         return extracted_pockets
@@ -199,15 +205,13 @@ class ProteinGrid:
         
         analysis_results = {}
         
-        for pocket_id, voxel_indices in extracted_pockets.items():
+        for pocket_id, pocket_coords in extracted_pockets.items():
             
-            pocket_coords = (voxel_indices * self.grid_spacing) + self.min_coords
             neighbor_indices = tree.query_ball_point(pocket_coords, r=search_radius)
-            
             unique_atom_indices = set([idx for sublist in neighbor_indices for idx in sublist])
             
             # 1. Real Volume in cubic Angstroms
-            volume_A3 = len(voxel_indices) * (self.grid_spacing ** 3)
+            volume_A3 = len(pocket_coords) * (self.grid_spacing ** 3)
             # 2. Center of Mass of the pocket (average X, Y, Z)
             pocket_com = np.mean(pocket_coords, axis=0)
 
