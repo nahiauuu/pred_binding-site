@@ -65,7 +65,7 @@ def build_ml_dataset(pdb_folder, output_csv="pocket_dataset.csv"):
 
 if __name__ == "__main__":
     # IMPORTANT: Change this path to wherever you put your folder of PDB files!
-    my_pdb_folder = "/home/diegovicente/pyt/pred_binding-site/pdb_dataset" 
+    my_pdb_folder = "/Users/pauvillen14/Desktop/BIOINFO/SBI/PROJECT/pred_binding-site/pdb_dataset" 
     
     # Run the building function
     build_ml_dataset(my_pdb_folder, output_csv="final_ml_dataset.csv")

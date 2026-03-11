@@ -376,7 +376,7 @@ if __name__ == "__main__":
     import os
     
     # Define your inputs here
-    work_dir = "/home/diegovicente/pyt"
+    work_dir = "/Users/pauvillen14/Desktop/BIOINFO/SBI/PROJECT/pred_binding-site"
     protein_name = "1STP"
     input_pdb = os.path.join(work_dir, f"{protein_name}.pdb")
     
